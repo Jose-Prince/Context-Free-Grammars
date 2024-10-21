@@ -14,12 +14,28 @@ class CFG {
    	return this.variables;
    }
 
+   public void setVariables(List<String> variables) {
+   	this.variables = variables;
+   }
+
    public List<String> getTerminals() {
 	return this.terminals;
    }
 
+   public void setTerminals(List<String> terminals) {
+	this.terminals = terminals;
+   }
+
    public HashMap<String, List<String>> getRules() {
    	return this.rules;
+   }
+
+   public void setRules(HashMap<String, List<String>>) {
+	this.rules = rules;	
+   }
+
+   public void convertCNF() {
+   	
    }
 
 }
