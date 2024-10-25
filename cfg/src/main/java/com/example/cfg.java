@@ -1,6 +1,10 @@
+package com.example;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
 
 class CFG {
    
@@ -8,7 +12,7 @@ class CFG {
    public List<String> terminals;
    public Map<String, List<List<String>>> rules;
 
-   public CFG(List<String> variables, List<String> terminals, HashMap<String, List<List<String>>> rules) {
+   public CFG(List<String> variables, List<String> terminals, Map<String, List<List<String>>> rules) {
 	this.variables = variables;
 	this.terminals = terminals;
 	this.rules = rules;
@@ -30,49 +34,50 @@ class CFG {
 	this.terminals = terminals;
    }
 
-   public HashMap<String, List<<List<String>>> getRules() {
+   public Map<String, List<List<String>>> getRules() {
    	return this.rules;
    }
 
-   public void setRules(HashMap<String, List<List<String>>> rules) {
+   public void setRules(Map<String, List<List<String>>> rules) {
 	this.rules = rules;	
    }
 
-   public void convertCNF() {
-	List<String> newVariables = new ArrayList<>(this.variables);
-	List<String> newTerminals = new ArrayList<>(this.terminals);
-	Map<String, List<List<String>>> newRules = new HashMap<>(this.rules);
+   public CFG convertCNF(CFG cfg) {
+	List<String> newVariables = new ArrayList<>(cfg.getVariables());
+	List<String> newTerminals = new ArrayList<>(cfg.getTerminals());
+	Map<String, List<List<String>>> newRules = new HashMap<>(cfg.getRules());
 
 	//First step: S0 -> S
 	newVariables.add("S0");
 	newRules.put("S0", new ArrayList<>(List.of(List.of("S"))));
 
 	//Second step: Lead to 2 variables or 1 terminal
-	
 	int bin = 1;
 	int counter = 0;
+
 	while (bin > 0) {
 		bin = 0;
+
+		// Copia temporal para evitar modificar la colección mientras la iteramos
 		Map<String, List<List<String>>> tempRules = new HashMap<>(newRules);
 
-		for (Map.Entry<String, List<List<String>>> entry : newRules.entrySet()) {
+		for (Map.Entry<String, List<List<String>>> entry : new HashMap<>(newRules).entrySet()) {
 			String variable = entry.getKey();
-			List<List<String>> productions = entry.getKey();
+			List<List<String>> productions = entry.getValue();
 
-			for (List<String> production : productions) {
+			for (List<String> production : new ArrayList<>(productions)) {
 				int index1 = productions.indexOf(production);
 
 				if (production.size() >= 2) {
-					for (String var : production) {
+					for (String var : new ArrayList<>(production)) {
 						if (newTerminals.contains(var)) {
 							String key = searchKey(newRules, var);
-							int index2 = y.indexOf(var);
-							tempRules.getValue(variable).get(index1).set(index2, key);
+							int index2 = production.indexOf(var);
+							tempRules.get(variable).get(index1).set(index2, key);
 						}
 					}
 
 					if (production.size() > 2) {
-						
 						String newKey = "X" + counter;
 						String firstValue = production.get(0);
 						String secondValue = production.get(1);
@@ -81,19 +86,20 @@ class CFG {
 
 						production.remove(0);
 						production.set(0, newKey);
-						
-						newVariables.add(newKey);
-						tempRules.add(newKey, newRule);
-					}
 
-					counter += 1;
-					bin += 1;
+						newVariables.add(newKey);
+						tempRules.put(newKey, newRule);
+
+						counter += 1;
+						bin += 1;
+					}
 				}
 			}
 		}
 
-		newRules = tempRules;
+		newRules = tempRules; // Asignar las reglas modificadas al final
 	}
+
 
 	//Third step: Delete epsilon transitions
 	boolean epsilon = true;
@@ -102,7 +108,7 @@ class CFG {
 	String keyEpsilon = searchKey(newRules, "e");
 	Map<String, List<List<String>>> tempMap = new HashMap<>(newRules);
 
-	for (Map.Entry<String, List<List<String>>> entry : map.entrySet()){
+	for (Map.Entry<String, List<List<String>>> entry : newRules.entrySet()){
 		String key = entry.getKey();
 		List<List<String>> listOfLists = entry.getValue();
 
@@ -137,7 +143,7 @@ class CFG {
 		List<List<String>> listOfLists = entry.getValue();
 
 		for (List<String> innerList: listOfLists) {
-			if (innerList.size() == 1 && newVariables.contains(innerList.get(0)) {
+			if (innerList.size() == 1 && newVariables.contains(innerList.get(0))) {
 				units.add(innerList.get(0));
 			}
 		}
@@ -145,54 +151,65 @@ class CFG {
 	}
 
 	//Changes unitarina transitions
-	Map<String, List<List<String>> tempMap = new HashMap<>(newRules);
+	tempMap = new HashMap<>(newRules); // Crea un nuevo map para evitar modificaciones concurrentes.
 	for (Map.Entry<String, List<List<String>>> entry : newRules.entrySet()) {
-	
+		
 		String key = entry.getKey();
 		
 		List<List<String>> listOfLists = new ArrayList<>(entry.getValue());
 
-		Iterator<List<String>> iterator = listOfLists.iterator();
-		while (iterator.hasNext()) {
-			List<String> innerList = iterator.next();
+		List<List<String>> toAdd = new ArrayList<>(); // Lista temporal para agregar reglas.
+		List<List<String>> toRemove = new ArrayList<>(); // Lista temporal para eliminar reglas.
+
+		for (List<String> innerList : listOfLists) {
 			if (innerList.size() == 1 && units.contains(innerList.get(0))) {
-				iterator.remove();
+				toRemove.add(innerList); // Agregar a la lista de eliminaciones.
 
 				String targetVariable = innerList.get(0);
-
-				List<List<String>> targetRules = newRules(targetVariable);
+				List<List<String>> targetRules = newRules.get(targetVariable);
 				if (targetRules != null) {
 					for (List<String> rule : targetRules) {
-						listOfLists.add(new ArrayList<>(rule));
+						toAdd.add(new ArrayList<>(rule)); // Agregar las nuevas reglas.
 					}
 				}
 			}
 		}
 
-		tempMap.put(key, listOfLists);
+		// Aplica los cambios fuera del bucle de iteración.
+		listOfLists.removeAll(toRemove);
+		listOfLists.addAll(toAdd);
+
+		tempMap.put(key, listOfLists); // Actualiza el map temporal.
 	}
-		
-	
+
 	newRules = tempMap;
 
-	//Fith step: Delete useless variables 
+
+	// Fifth step: Delete useless variables 
 	List<String> variablesUse = new ArrayList<>();
 
 	findReachableVariables("S0", newRules, variablesUse);
 
-	Map<String, List<List<String>>> tempMap = new HashMap<>(newRules);
+	tempMap = new HashMap<>(newRules); // Copiamos el map para evitar problemas con modificaciones concurrentes.
+
+	List<String> keysToRemove = new ArrayList<>(); // Lista para almacenar las claves que queremos eliminar.
+
 	for (String key : newRules.keySet()) {
 		if (!variablesUse.contains(key) && !key.equals("S0")) {
-			tempMap.remove(key);
+			keysToRemove.add(key); // Agregar claves a eliminar.
 		}
+	}
+
+	// Realizamos la eliminación fuera del bucle.
+	for (String key : keysToRemove) {
+		tempMap.remove(key);
 	}
 
 	newRules = tempMap;
 
+
 	//Sets attributes for CFG
-	this.setVariables(newVariables);
-	this.setTerminals(newTerminals);
-	this.setRules(newRules);
+	return new CFG(newVariables, newTerminals, newRules);
    }
 
    private String searchKey(Map<String, List<List<String>>> map, String value) {
@@ -207,14 +224,14 @@ class CFG {
 		}
 	}
 
-	return null;
+	return "-";
    }
 
 	private void findReachableVariables(String variable, Map<String, List<List<String>>> rules, List<String> reachable) {
 	if (!reachable.contains(variable)) {
 		reachable.add(variable);
 		List<List<String>> productions = rules.get(variable);
-		if (production != null) {
+		if (productions != null) {
 			for (List<String> production : productions) {
 				for (String symbol : production) {
 					if (rules.containsKey(symbol)) {
