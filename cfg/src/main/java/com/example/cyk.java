@@ -4,6 +4,7 @@ import java.util.*;
 
 public class cyk {
     public boolean result;
+    public long execution;
     private List<String> variables;
     private List<String> terminals;
     private Map<String, List<List<String>>> rules;
@@ -21,6 +22,9 @@ public class cyk {
 
     @SuppressWarnings("unchecked")
     public void apply_cyk(String splitChar, String istate) {
+        // Inicia el cronómetro
+        long startTime = System.nanoTime();
+
         words = w.split(splitChar);
         int n = words.length;
 
@@ -70,6 +74,10 @@ public class cyk {
 
         // La palabra es aceptada si el símbolo inicial está en t[0][n]
         result = table[0][n].contains(istate); // Registramos istate como el estado inicial
+
+        // Termina el cronómetro
+        long endTime = System.nanoTime();
+        execution = endTime - startTime;
     }
 
     // Función para generar el árbol de derivación usando la función gen

@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class App {
 	public static void main(String[] args) {
+		Scanner s = new Scanner(System.in);
+
 		// CFG inicialization
 		List<String> variables = List.of("S", "VP", "PP", "NP", "V", "P", "N", "Det");
 		List<String> terminals = List.of("cooks", "drinks", "eats", "cuts", "he", "she", "in", "with", "cat", "dog",
@@ -97,13 +100,20 @@ public class App {
 		}
 
 		// Aplicación del algoritmo CYK
-		String word = "the cat drinks the meat"; // CAMBIAR POR INPUT
+		System.out.println("Bienvenido");
+		System.out.println("Ingresa la frase que deseas evaluar: ");
+		String word = s.nextLine();
+		System.out.println();
 		cyk parser = new cyk(variablese, terminalse, rulese, word);
 		parser.apply_cyk(" ", "S0");
-		if (parser.result) {
+		if (parser.result) { // FORMAR PARSE TREE
+			System.out.println("\nSí pertenece al lenguaje");
+			System.out.println("Tiempo de validación: " + parser.execution + "ns.");
 			List<Object> parseTree = parser.generateParseTree();
 			System.out.println("Árbol de derivación: " + parseTree);
 		} else {
+			System.out.println("\nNo pertenece al lenguaje");
+			System.out.println("Tiempo de validación: " + parser.execution + "ns.");
 			System.out.println("No se puede generar la palabra.");
 		}
 	}
