@@ -76,17 +76,6 @@ public class App {
 
 		boolean check = true;
 
-		// Aplicación del algoritmo CYK
-		String word = "he eats a soup"; // CAMBIAR POR INPUT
-		cyk parser = new cyk(variables, terminals, rules, word);
-		parser.apply_cyk(" ", "S0");
-		if (parser.result) {
-			List<Object> parseTree = parser.generateParseTree();
-			System.out.println("Árbol de derivación: " + parseTree);
-		} else {
-			System.out.println("No se puede generar la palabra.");
-		}
-
 		for (Map.Entry<String, List<List<String>>> entry : rulese.entrySet()) {
 			String key = entry.getKey();
 			List<List<String>> productions = entry.getValue();
@@ -107,6 +96,15 @@ public class App {
 			}
 		}
 
-		System.out.println("Hola");
+		// Aplicación del algoritmo CYK
+		String word = "the cat drinks the meat"; // CAMBIAR POR INPUT
+		cyk parser = new cyk(variablese, terminalse, rulese, word);
+		parser.apply_cyk(" ", "S0");
+		if (parser.result) {
+			List<Object> parseTree = parser.generateParseTree();
+			System.out.println("Árbol de derivación: " + parseTree);
+		} else {
+			System.out.println("No se puede generar la palabra.");
+		}
 	}
 }
