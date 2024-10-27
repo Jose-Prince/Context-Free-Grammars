@@ -111,6 +111,9 @@ public class App {
 			System.out.println("Tiempo de validación: " + parser.execution + "ns.");
 			List<Object> parseTree = parser.generateParseTree();
 			System.out.println("Árbol de derivación: " + parseTree);
+			/* CREACION DE ARBOL */
+			parse_tree visualizer = new parse_tree();
+			visualizer.obtener_infomacion(parseTree);
 		} else {
 			System.out.println("\nNo pertenece al lenguaje");
 			System.out.println("Tiempo de validación: " + parser.execution + "ns.");
